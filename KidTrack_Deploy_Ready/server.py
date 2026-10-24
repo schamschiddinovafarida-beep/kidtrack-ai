@@ -46,7 +46,7 @@ def ask_ai(messages):
     )
 
     try:
-        with urlopen(req, timeout=22) as response:
+        with urlopen(req, timeout=60) as response:
             data = json.load(response)
         answer = data['choices'][0]['message']['content']
         if not isinstance(answer, str) or not answer.strip():
