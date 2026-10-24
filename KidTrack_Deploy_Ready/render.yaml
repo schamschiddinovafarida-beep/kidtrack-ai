@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: kidtrack-mvp
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT server:app
+    envVars:
+      - key: KIDTRACK_API_KEY
+        sync: false
+      - key: KIDTRACK_MODEL
+        value: gpt-4o-mini
