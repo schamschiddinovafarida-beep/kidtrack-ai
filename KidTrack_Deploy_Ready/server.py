@@ -30,7 +30,11 @@ def ask_ai(messages):
         with urlopen(req, timeout=22) as r:
             data = json.load(r)
         return data['choices'][0]['message']['content'], None
-    except (HTTPError, URLError, KeyError, ValueError, TimeoutError) as e:
+        except HTTPError as e:
+        print("AI HTTP status:", e.code, flush=True)
+        return None, 'Не удалось получить ответ AI. Проверьте ключ, интернет и настройки сервера.'
+    except (URLError, KeyError, ValueError, TimeoutError) as e:
+        print("AI request failed:", type(e).__name__, flush=True)
         return None, 'Не удалось получить ответ AI. Проверьте ключ, интернет и настройки сервера.'
 
 @app.get('/')
