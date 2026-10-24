@@ -17,27 +17,45 @@ def secure_headers(response):
 
 SYSTEM = '''Ты KidTrack AI, дружелюбный помощник по организации учебы и отдыха школьников Кыргызстана. Отвечай на русском или кыргызском по языку запроса. Помогай составлять реалистичный план дня с перерывами, учебой, отдыхом и достаточным временем на сон. Не ставь диагнозов, не давай медицинских заключений. Не предлагай слежку, контроль или раскрытие местоположения ребенка. Не проси личные данные, имя, адрес, школу, координаты. Если данных не хватает, уточняй. Отвечай кратко, практично, без категоричных медицинских норм.'''
 
+
 def ask_ai(messages):
     key = os.environ.get('KIDTRACK_API_KEY', '').strip()
     if not key:
         return None, 'AI не подключён: настройте KIDTRACK_API_KEY на сервере.'
+
     base = os.environ.get('KIDTRACK_API_URL', 'https://api.openai.com/v1/chat/completions')
-    # Do not allow runtime client-specified URLs or credentials
     model = os.environ.get('KIDTRACK_MODEL', 'gpt-4o-mini')
-    payload = json.dumps({'model': model, 'messages': [{'role':'system','content':SYSTEM}] + messages, 'max_tokens':650, 'temperature':0.5}, ensure_ascii=False).encode('utf-8')
-    req = Request(base, data=payload, headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'}, method='POST')
+
+    payload = json.dumps({
+        'model': model,
+        'messages': [{'role': 'system', 'content': SYSTEM}] + messages,
+        'max_tokens': 650,
+        'temperature': 0.5
+    }, ensure_ascii=False).encode('utf-8')
+
+    req = Request(
+        base,
+        data=payload,
+        headers={
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json'
+        },
+        method='POST'
+    )
+
     try:
         with urlopen(req, timeout=22) as r:
             data = json.load(r)
         return data['choices'][0]['message']['content'], None
-        except HTTPError as e:
-        print("AI HTTP status:", e.code, flush=True)
-        return None, 'Не удалось получить ответ AI. Проверьте ключ, интернет и настройки сервера.'
-    except (URLError, KeyError, ValueError, TimeoutError) as e:
-        print("AI request failed:", type(e).__name__, flush=True)
-        return None, 'Не удалось получить ответ AI. Проверьте ключ, интернет и настройки сервера.'
 
-@app.get('/')
+    except HTTPError as e:
+        print('AI HTTP status:', e.code, flush=True)
+        return None, 'Не удалось получить ответ AI. Проверьте настройки сервера.'
+
+    except (URLError, KeyError, ValueError, TimeoutError) as e:
+        print('AI request failed:', type(e).__name__, flush=True)
+        return None, 'Не удалось получить ответ AI. Проверьте настройки сервера.'
+
 def index(): return send_from_directory('static','index.html')
 
 @app.get('/api/status')
